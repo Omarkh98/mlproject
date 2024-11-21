@@ -11,6 +11,7 @@ from sklearn.metrics import (
     mean_absolute_error, 
     mean_squared_error
 )
+from sklearn.model_selection import GridSearchCV
 
 def save_object(file_path, object):
     try:
@@ -25,13 +26,19 @@ def save_object(file_path, object):
     except Exception as e:
         raise CustomException(e, sys)
     
-def evaluate_model(X_train, y_train, X_test, y_test, models):
+def evaluate_model(X_train, y_train, X_test, y_test, models, params):
     try:
         report = {}
 
         for m in range(len(list(models))):
             model = list(models.values())[m]
+            parameters = params[list(models.keys())[m]]
+            
+            logging.info("Tuning HyperParameters...")
+            grid_search = GridSearchCV(model, parameters, cv = 3)
+            grid_search.fit(X_train, y_train)
 
+            model.set_params(**grid_search.best_params_)
             model.fit(X_train, y_train)
 
             y_train_prediction = model.predict(X_train)
